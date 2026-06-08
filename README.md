@@ -36,7 +36,8 @@ Optional:
 - `OPENCLAW_GATEWAY_TOKEN` — if not set, the wrapper generates one (not ideal). In a template, set it using a generated secret.
 
 Notes:
-- This template installs OpenClaw from npm, pinned to a released version by default via Docker build arg `OPENCLAW_VERSION` (override to install a different release, e.g. `latest`).
+- This template installs OpenClaw from npm, pinned to a released version via Docker build arg `OPENCLAW_VERSION` (override to install a different release).
+- On first boot the entrypoint copies OpenClaw to the persistent volume (`/data/openclaw`) so that `openclaw update` changes survive container restarts.
 
 4) Enable **Public Networking** (HTTP). Railway will assign a domain.
    - This service listens on Railway’s injected `PORT` at runtime (recommended).
@@ -77,6 +78,7 @@ If you’re filing a bug, please include the output of:
 Railway containers have an ephemeral filesystem. Only the mounted volume at `/data` persists across restarts/redeploys.
 
 What persists cleanly today:
+- **OpenClaw itself:** the entrypoint installs OpenClaw to `/data/openclaw` on first boot. Running `openclaw update` updates that copy in-place, and the change survives container restarts. Redeploying with a newer image auto-upgrades the volume (never downgrades).
 - **Custom skills / code:** anything under `OPENCLAW_WORKSPACE_DIR` (default: `/data/workspace`)
 - **Node global tools (npm/pnpm):** this template configures defaults so global installs land under `/data`:
   - npm globals: `/data/npm` (binaries in `/data/npm/bin`)
@@ -152,7 +154,7 @@ If you see warnings about deprecated `CLAWDBOT_*` variables or state dir split-b
 ## Local smoke test
 
 ```bash
-docker build -t clawdbot-railway-template .
+docker build -t openclaw-railway-template .
 
 docker run --rm -p 8080:8080 \
   -e PORT=8080 \
@@ -160,7 +162,7 @@ docker run --rm -p 8080:8080 \
   -e OPENCLAW_STATE_DIR=/data/.openclaw \
   -e OPENCLAW_WORKSPACE_DIR=/data/workspace \
   -v $(pwd)/.tmpdata:/data \
-  clawdbot-railway-template
+  openclaw-railway-template
 
 # open http://localhost:8080/setup (password: test)
 ```
