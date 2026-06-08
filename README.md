@@ -36,7 +36,7 @@ Optional:
 - `OPENCLAW_GATEWAY_TOKEN` — if not set, the wrapper generates one (not ideal). In a template, set it using a generated secret.
 
 Notes:
-- This template pins OpenClaw to a released version by default via Docker build arg `OPENCLAW_GIT_REF` (override if you want `main`).
+- This template installs OpenClaw from npm, pinned to a released version by default via Docker build arg `OPENCLAW_VERSION` (override to install a different release, e.g. `latest`).
 
 4) Enable **Public Networking** (HTTP). Railway will assign a domain.
    - This service listens on Railway’s injected `PORT` at runtime (recommended).
@@ -148,14 +148,6 @@ If you see warnings about deprecated `CLAWDBOT_*` variables or state dir split-b
 - Use `OPENCLAW_*` variables only
 - Ensure `OPENCLAW_STATE_DIR=/data/.openclaw` and `OPENCLAW_WORKSPACE_DIR=/data/workspace`
 - Redeploy after fixing Railway Variables
-
-### Build OOM (out of memory) on Railway
-
-Building OpenClaw from source can exceed small memory tiers.
-
-Recommendations:
-- Use a plan with **2GB+ memory**.
-- If you see `Reached heap limit Allocation failed - JavaScript heap out of memory`, upgrade memory and redeploy.
 
 ## Local smoke test
 
