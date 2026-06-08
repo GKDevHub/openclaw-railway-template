@@ -14,7 +14,7 @@ async function gh(path) {
     headers: {
       authorization: `Bearer ${token}`,
       accept: "application/vnd.github+json",
-      "user-agent": "clawdbot-railway-template-bot",
+      "user-agent": "openclaw-railway-template-bot",
     },
   });
   if (!res.ok) {
@@ -23,32 +23,39 @@ async function gh(path) {
   return res.json();
 }
 
-function readCurrentTag(dockerfile) {
-  const m = dockerfile.match(/\nARG OPENCLAW_GIT_REF=([^\n]+)\n/);
+// The Dockerfile installs `openclaw@<version>` from npm. npm versions are the
+// release tag without the leading "v" (e.g. tag v2026.6.1 -> npm 2026.6.1).
+function tagToVersion(tag) {
+  return tag.replace(/^v/, "");
+}
+
+function readCurrentVersion(dockerfile) {
+  const m = dockerfile.match(/\nARG OPENCLAW_VERSION=([^\n]+)\n/);
   return m ? m[1].trim() : null;
 }
 
-function replaceTag(dockerfile, next) {
-  const re = /\nARG OPENCLAW_GIT_REF=([^\n]+)\n/;
-  if (!re.test(dockerfile)) throw new Error("Could not find OPENCLAW_GIT_REF line");
-  return dockerfile.replace(re, `\nARG OPENCLAW_GIT_REF=${next}\n`);
+function replaceVersion(dockerfile, next) {
+  const re = /\nARG OPENCLAW_VERSION=([^\n]+)\n/;
+  if (!re.test(dockerfile)) throw new Error("Could not find OPENCLAW_VERSION line");
+  return dockerfile.replace(re, `\nARG OPENCLAW_VERSION=${next}\n`);
 }
 
 const latest = await gh(`/repos/${owner}/${repo}/releases/latest`);
 const latestTag = latest.tag_name;
 if (!latestTag) throw new Error("No tag_name in latest release response");
+const latestVersion = tagToVersion(latestTag);
 
 const dockerPath = "Dockerfile";
 const docker = fs.readFileSync(dockerPath, "utf8");
-const currentTag = readCurrentTag(docker);
-if (!currentTag) throw new Error("Could not parse current OPENCLAW_GIT_REF");
+const currentVersion = readCurrentVersion(docker);
+if (!currentVersion) throw new Error("Could not parse current OPENCLAW_VERSION");
 
-console.log(`current=${currentTag} latest=${latestTag}`);
+console.log(`current=${currentVersion} latest=${latestVersion}`);
 
-if (currentTag === latestTag) {
+if (currentVersion === latestVersion) {
   console.log("No update needed.");
   process.exit(0);
 }
 
-fs.writeFileSync(dockerPath, replaceTag(docker, latestTag));
-console.log(`Updated ${dockerPath} to ${latestTag}`);
+fs.writeFileSync(dockerPath, replaceVersion(docker, latestVersion));
+console.log(`Updated ${dockerPath} to ${latestVersion}`);
