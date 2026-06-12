@@ -20,7 +20,7 @@ RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
 
 # Seed OpenClaw version in the image (fallback + first-boot source).
 # Override OPENCLAW_VERSION in Railway template settings to pin a different release.
-ARG OPENCLAW_VERSION=2026.6.1
+ARG OPENCLAW_VERSION=2026.6.6
 RUN npm install -g --no-audit --no-fund "openclaw@${OPENCLAW_VERSION}" \
   && npm cache clean --force
 
